@@ -14,9 +14,11 @@ def load_ascii_art(filename):
     with open(filename, 'r') as file:
         return file.readlines()
 
-def display_screen(stdscr, ascii_art):
+def display_screen(stdscr, ascii_art, start_y=7):
     """Display ASCII art on the screen using curses."""
-    for i, line in enumerate(ascii_art, start=7):
+    for i, line in enumerate(ascii_art, start=start_y):
+        if i >= curses.LINES:
+            break
         stdscr.addstr(i, 3, line.rstrip(), curses.color_pair(1))
 
 def display_stats(stdscr, player):
@@ -254,13 +256,21 @@ def main_menu(stdscr, player):
         stdscr.addstr(0, 2, " THE STORY OF GLIN ", curses.color_pair(3) | curses.A_BOLD)
         display_stats(stdscr, player)
         ascii_art = load_ascii_art(MAP_FILE)
-        stdscr.addstr(25, 3, "Your options")
-        stdscr.addstr(26, 3, "1. Explore", curses.color_pair(3) | curses.A_BOLD)
-        stdscr.addstr(27, 3, "2. Visit Darkweb", curses.color_pair(3) | curses.A_BOLD)
-        stdscr.addstr(28, 3, "3. Visit Cybercafe", curses.color_pair(3) | curses.A_BOLD)
-        stdscr.addstr(29, 3, "4. Save and Exit", curses.color_pair(3) | curses.A_BOLD)
 
-        display_screen(stdscr, ascii_art)
+        height, _ = stdscr.getmaxyx()
+        art_start = 7
+        if art_start + len(ascii_art) + 5 >= height:
+            art_start = max(0, height - (len(ascii_art) + 6))
+        options_start = art_start + len(ascii_art) + 1
+
+        display_screen(stdscr, ascii_art, start_y=art_start)
+
+        if options_start + 4 < height:
+            stdscr.addstr(options_start, 3, "Your options")
+            stdscr.addstr(options_start + 1, 3, "1. Explore", curses.color_pair(3) | curses.A_BOLD)
+            stdscr.addstr(options_start + 2, 3, "2. Visit Darkweb", curses.color_pair(3) | curses.A_BOLD)
+            stdscr.addstr(options_start + 3, 3, "3. Visit Cybercafe", curses.color_pair(3) | curses.A_BOLD)
+            stdscr.addstr(options_start + 4, 3, "4. Save and Exit", curses.color_pair(3) | curses.A_BOLD)
         stdscr.refresh()
 
         choice = stdscr.getch()
